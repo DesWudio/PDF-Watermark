@@ -74,7 +74,7 @@ def select_input_pdf():
 
 
 def select_watermark_image():
-    file_path = filedialog.askopenfilename(filetypes=[("PNG Files", "*.*")])
+    file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.*")])
     if file_path:
         watermark_image_entry.delete(0, tk.END)
         watermark_image_entry.insert(0, file_path)
@@ -116,7 +116,7 @@ input_pdf_button = tk.Button(root,
                              command=select_input_pdf)
 input_pdf_button.pack(pady=5)
 
-watermark_image_label = tk.Label(root, text="Watermark PNG file:")
+watermark_image_label = tk.Label(root, text="Watermark file:")
 watermark_image_label.pack(pady=5)
 watermark_image_entry = tk.Entry(root, width=50)
 watermark_image_entry.pack(pady=5)
@@ -141,7 +141,7 @@ margin_y_entry.pack(pady=5)
 factor_label = tk.Label(root, text="Scale:")
 factor_label.pack(pady=5)
 factor_entry = tk.Entry(root, width=20)
-factor_entry.insert(0, "0.2") # Default 0.2
+factor_entry.insert(0, "1.0")
 factor_entry.pack(pady=5)
 
 output_pdf_label = tk.Label(root, text="Output PDF file name:")

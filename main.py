@@ -14,7 +14,7 @@ from PIL import Image
 
 
 # Process to avoid PIL error
-def create_watermark(watermark_image_path, margin_x_mm, margin_y_mm):
+def create_watermark(watermark_image_path, margin_x, margin_y, scale=1.0):
     width, height = A4
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=A4)
@@ -23,14 +23,19 @@ def create_watermark(watermark_image_path, margin_x_mm, margin_y_mm):
     if img.mode != 'RGBA':
         img = img.convert('RGBA')
 
+    # Compatable to different watermark size
+    w, h = img.size
+    scaled_w = int(w * scale)
+    scaled_h = int(h * scale)
+
     temp_img_path = 'temp_watermark.png'
     img.save(temp_img_path, 'PNG')
 
     can.drawImage(temp_img_path,
-                  width - margin_x_mm * mm - 100,
-                  height - margin_y_mm * mm - 50,
-                  width=100,
-                  height=50)
+                  width - margin_x * mm - scaled_w,
+                  height - margin_y * mm - scaled_h,
+                  width=scaled_w,
+                  height=scaled_h)
     can.save()
     packet.seek(0)
     new_pdf = PdfReader(packet)
@@ -42,9 +47,9 @@ def create_watermark(watermark_image_path, margin_x_mm, margin_y_mm):
 
 
 def add_watermark_to_pdf(input_pdf_path, watermark_image_path, margin_x_mm,
-                         margin_y_mm, output_pdf_path):
+                         margin_y_mm, output_pdf_path, factor):
     watermark_page = create_watermark(watermark_image_path, margin_x_mm,
-                                      margin_y_mm)
+                                      margin_y_mm, factor)
     input_pdf = PdfReader(input_pdf_path)
     output_pdf = PdfWriter()
 
@@ -81,26 +86,27 @@ def start_processing():
     try:
         margin_x = float(margin_x_entry.get())
         margin_y = float(margin_y_entry.get())
+        # Get factor
+        factor = float(factor_entry.get())
     except ValueError:
-        status_label.config(text="Please enter valid numbers for margins.")
+        status_label.config(text="Invalid margin or scale value!")
         return
     output_pdf = output_pdf_entry.get()
     if input_pdf and watermark_image and output_pdf:
         try:
             add_watermark_to_pdf(input_pdf, watermark_image, margin_x,
-                                 margin_y, output_pdf)
-            status_label.config(text="Processing completed!")
+                                 margin_y, output_pdf, factor)
+            status_label.config(text="Done!")
         except Exception as e:
-            status_label.config(text=f"Error occurred: {str(e)}")
+            status_label.config(text=f"Error: {str(e)}")
     else:
-        status_label.config(text="Please ensure all file paths are filled.")
+        status_label.config(text="Make sure all fields are filled!")
 
 
-# GUI
+# GUI ----------------------------------------------
 root = tk.Tk()
 root.title("PDF Watermarking Tool")
 
-# GUI Elements
 input_pdf_label = tk.Label(root, text="Input PDF file:")
 input_pdf_label.pack(pady=5)
 input_pdf_entry = tk.Entry(root, width=50)
@@ -122,12 +128,21 @@ watermark_image_button.pack(pady=5)
 margin_x_label = tk.Label(root, text="Margin X (mm) from top-right:")
 margin_x_label.pack(pady=5)
 margin_x_entry = tk.Entry(root, width=20)
+margin_x_entry.insert(0, "10")  # Default 10mm
 margin_x_entry.pack(pady=5)
 
 margin_y_label = tk.Label(root, text="Margin Y (mm) from top-right")
 margin_y_label.pack(pady=5)
 margin_y_entry = tk.Entry(root, width=20)
+margin_y_entry.insert(0, "10")  # Default 10mm
 margin_y_entry.pack(pady=5)
+
+# Add factor entry for better result
+factor_label = tk.Label(root, text="Scale:")
+factor_label.pack(pady=5)
+factor_entry = tk.Entry(root, width=20)
+factor_entry.insert(0, "0.2") # Default 0.2
+factor_entry.pack(pady=5)
 
 output_pdf_label = tk.Label(root, text="Output PDF file name:")
 output_pdf_label.pack(pady=5)
@@ -142,5 +157,6 @@ process_button.pack(pady=20)
 status_label = tk.Label(root, text="")
 status_label.pack(pady=5)
 
-# Start
+# End of GUI ----------------------------------------------
+
 root.mainloop()
